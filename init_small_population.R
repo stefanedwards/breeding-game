@@ -6,7 +6,7 @@ source('global.R')
 FOUNDER <- AlphaSimR::runMacs(500, 1, 2000, species='CATTLE')
 
 SIMPARAM <- createSimulation(FOUNDER, maxQtl = 500, maxSnp = 500, gender='yes_rand')
-SIMPARAM <- addTraitA(FOUNDER,nQtlPerChr=500,meanG=0,varG=1,
+SIMPARAM <- addTraitA(FOUNDER,nQtlPerChr=500,meanG=5,varG=1,
                      simParam=SIMPARAM)
 
 base.pop <- newPop(FOUNDER, simParam = SIMPARAM)
