@@ -37,13 +37,14 @@ shinyServer(function(input, output, session) {
     
     results <- list(animals=data.frame())
     new.pop <- setPheno(seed.pop, varE = varG(seed.pop)*2)
-    stat.G <- data.frame(Generation=1:15, meanG=integer(15), varG=integer(15), meanY=integer(15), h2=numeric(15))
+    stat.G <- data.frame(Generation=0:15, meanG=integer(15), varG=integer(15), meanY=integer(15), h2=numeric(15))
+    stat.G[1, 2:5] <-  c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
     for (i in 1:15) {
       progress$set(value = i)
       new.pop <- method(new.pop)
       new.pop <- setPheno(new.pop, varE = varG(new.pop)*2)
       results$animals <- bind_rows(results$animals, data.frame(Generation=i, id=new.pop@id, y=new.pop@pheno, stringsAsFactors = FALSE))
-      stat.G[i,2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
+      stat.G[i+1,2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
       
       if (varG(new.pop) < 0.1) {
         showModal(modalDialog('Your heard, it ded!', footer = modalButton("Dismiss"), fade=TRUE))
@@ -61,7 +62,6 @@ shinyServer(function(input, output, session) {
       ggplot(aes(x=Generation, y=val, colour=stat)) +
         geom_point() + geom_line() +
         coord_capped_cart(bottom='none', left='none') +
-      
         facet_rep_grid(stat ~ ., switch='y', scales='free_y') + 
         theme_classic() + theme(strip.placement='outside')
 
@@ -80,7 +80,7 @@ shinyServer(function(input, output, session) {
       scale_fill_continuous(low='#F7FBFF', high='#08306B')  +            # brewer.pal(9, 'Blues')  [1] "#F7FBFF" "#DEEBF7" "#C6DBEF" "#9ECAE1" "#6BAED6" "#4292C6" "#2171B5" "#08519C" "#08306B"
       coord_cartesian(xlim=c(0,15)) +
       guides(fill=FALSE) +
-      labs(y='Genes in herd')
+      labs(y='Genes in herd', title='How many genes are there in the herd?')
     p2 <- ggplotGrob(p2)
     
     grid.draw(rbind(p1, p2, size='first'))
