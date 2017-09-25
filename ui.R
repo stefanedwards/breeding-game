@@ -23,7 +23,10 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
   
     # Show result
     mainPanel(
-      plotOutput('plotMain')
+      tabsetPanel(
+        tabPanel('Cows!', plotOutput('plotCows')),
+        tabPanel('Diagnostics', plotOutput('plotMain'))
+      )
     )
   )
 ))

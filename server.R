@@ -34,27 +34,40 @@ shinyServer(function(input, output, session) {
         randCross2(cows, bulls, nCrosses = pop@nInd, balance = TRUE, ignoreGender = FALSE, simParam=SIMPARAM)
       }
     }
+    
+    results <- list(animals=data.frame())
     new.pop <- setPheno(seed.pop, varE = varG(seed.pop)*2)
     stat.G <- data.frame(Generation=1:15, meanG=integer(15), varG=integer(15), meanY=integer(15), h2=numeric(15))
     for (i in 1:15) {
       progress$set(value = i)
       new.pop <- method(new.pop)
       new.pop <- setPheno(new.pop, varE = varG(new.pop)*2)
+      results$animals <- bind_rows(results$animals, data.frame(Generation=i, id=new.pop@id, y=new.pop@pheno, stringsAsFactors = FALSE))
       stat.G[i,2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
     }
-    stat.G
+    results$stat.G <- stat.G
+    results
   })
   
   output$plotMain <- renderPlot({
     data <- breed()
     
-    data %>% gather(stat, val, -Generation) %>%
+    data$stat.G %>% gather(stat, val, -Generation) %>%
       ggplot(aes(x=Generation, y=val, colour=stat)) +
         geom_point() + geom_line() +
         coord_capped_cart(bottom='none', left='none') +
+      
         facet_rep_grid(stat ~ ., switch='y', scales='free_y') + 
         theme_classic() + theme(strip.placement='outside')
 
   })
+  
+  output$plotCows <- renderPlot({
+    data <- breed()
+    
+    p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation)) %>%
+      ggplot(aes(x=Generation, y=y, width=y/10, height=y/10)) + geom_tile()
+    grid.draw(replace_rect_cows(p))
+  })  
 
 })
