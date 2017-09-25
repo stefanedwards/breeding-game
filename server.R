@@ -66,7 +66,8 @@ shinyServer(function(input, output, session) {
     data <- breed()
     
     p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation)) %>%
-      ggplot(aes(x=Generation, y=y, width=y/10, height=y/10)) + geom_tile()
+      ggplot(aes(x=x, y=y, width=y/input$cexWidth, height=y/input$cexHeight)) + geom_tile() +
+        labs(x='Generation')
     grid.draw(replace_rect_cows(p))
   })  
 

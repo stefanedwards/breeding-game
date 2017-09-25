@@ -43,12 +43,10 @@ replace_rect_cows <- function(g, panel='panel') {
   if (is.ggplot(g)) g <- ggplotGrob(g)
   
   i <- which(g$layout$name == 'panel')
-  g$grobs[[i]]
-  
   j <- which(sapply(g$grobs[[i]]$children, function(x) 'rect' %in% class(x)))
 
   cow.tiles <- with(g$grobs[[i]]$children[[j]], 
-                    emoGG::emojisGrob(x=x, y=y, size=width, img=cow.emoji))
+                    rasterGrob(image=cow.emoji, x=x, y=y, width=width, height=height))
   g$grobs[[i]]$children[[j]] <- cow.tiles
   
   g
