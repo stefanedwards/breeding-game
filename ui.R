@@ -24,8 +24,8 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
         ),
         tabPanel('Settings', 
           helpText('Scalars for making the cows look nice'),
-          numericInput('cexWidth','Width multiplier', 10),
-          numericInput('cexHeight', 'Height multiplier', 10),
+          numericInput('cexWidth','Width divider', 10),
+          numericInput('cexHeight', 'Height divider', 10),
           hr()
         )
       )
@@ -34,8 +34,10 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
     # Show result
     mainPanel(
       tabsetPanel(
-        tabPanel('Cows!', plotOutput('plotCows')),
-        tabPanel('Diagnostics', plotOutput('plotMain'))
+        tabPanel('Cows!', 
+                 plotOutput('plotCows', height='800px')  ## modify height of plot windows here! height="auto" or height="100%" does not work; kills everything
+                 ),        
+        tabPanel('Diagnostics', plotOutput('plotMain'))   ##
       )
     )
   )

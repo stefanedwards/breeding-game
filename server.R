@@ -44,6 +44,11 @@ shinyServer(function(input, output, session) {
       new.pop <- setPheno(new.pop, varE = varG(new.pop)*2)
       results$animals <- bind_rows(results$animals, data.frame(Generation=i, id=new.pop@id, y=new.pop@pheno, stringsAsFactors = FALSE))
       stat.G[i,2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
+      
+      if (varG(new.pop) < 0.1) {
+        showModal(modalDialog('Your heard, it ded!', footer = modalButton("Dismiss"), fade=TRUE))
+        break
+      }
     }
     results$stat.G <- stat.G
     results
@@ -67,8 +72,18 @@ shinyServer(function(input, output, session) {
     
     p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation)) %>%
       ggplot(aes(x=x, y=y, width=y/input$cexWidth, height=y/input$cexHeight)) + geom_tile() +
-        labs(x='Generation')
-    grid.draw(replace_rect_cows(p))
+        coord_cartesian(xlim=c(0,15)) +
+        labs(x='Generation', title='Growing cows')
+    p1 <- replace_rect_cows(p)
+    p2 <-     data$stat.G %>% ggplot(aes(x=Generation, y=varG * 100, fill=varG)) +
+      geom_bar(stat='identity') +
+      scale_fill_continuous(low='#F7FBFF', high='#08306B')  +            # brewer.pal(9, 'Blues')  [1] "#F7FBFF" "#DEEBF7" "#C6DBEF" "#9ECAE1" "#6BAED6" "#4292C6" "#2171B5" "#08519C" "#08306B"
+      coord_cartesian(xlim=c(0,15)) +
+      guides(fill=FALSE) +
+      labs(y='Genes in herd')
+    p2 <- ggplotGrob(p2)
+    
+    grid.draw(rbind(p1, p2, size='first'))
   })  
 
 })
