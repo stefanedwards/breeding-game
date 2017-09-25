@@ -24,8 +24,8 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
         ),
         tabPanel('Settings', 
           helpText('Scalars for making the cows look nice'),
-          numericInput('cexWidth','Width divider', 10),
-          numericInput('cexHeight', 'Height divider', 10),
+          numericInput('cexWidth','Width divider', 15),
+          numericInput('cexHeight', 'Height divider', 6),
           hr()
         )
       )

@@ -37,8 +37,8 @@ shinyServer(function(input, output, session) {
     
     results <- list(animals=data.frame())
     new.pop <- setPheno(seed.pop, varE = varG(seed.pop)*2)
-    stat.G <- data.frame(Generation=0:15, meanG=integer(15), varG=integer(15), meanY=integer(15), h2=numeric(15))
-    stat.G[1, 2:5] <-  c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
+    stat.G <- data.frame(Generation=0:15) %>% mutate(meanG=0, varG=NA, meanY=0, h2=NA)
+    stat.G[1, 2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
     for (i in 1:15) {
       progress$set(value = i)
       new.pop <- method(new.pop)
@@ -70,10 +70,15 @@ shinyServer(function(input, output, session) {
   output$plotCows <- renderPlot({
     data <- breed()
     
+    r <- range(data$animals$y)
+    scale.w <- input$cexWidth *  (r[2]-r[1]) / 15
+    scale.h <- input$cexHeight * 15 / (r[2]-r[1])
+    
     p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation)) %>%
-      ggplot(aes(x=x, y=y, width=y/input$cexWidth, height=y/input$cexHeight)) + geom_tile() +
+      ggplot(aes(x=x, y=y, width=y/scale.w, height=y/scale.h)) + geom_tile() +
         coord_cartesian(xlim=c(0,15)) +
         labs(x='Generation', title='Growing cows')
+    
     p1 <- replace_rect_cows(p)
     p2 <-     data$stat.G %>% ggplot(aes(x=Generation, y=varG * 100, fill=varG)) +
       geom_bar(stat='identity') +
