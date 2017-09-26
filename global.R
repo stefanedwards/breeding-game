@@ -8,14 +8,26 @@ library(grid)
 library(lemon)
 library(AlphaSimR)
 library(emoGG)
+library(shinyjs)
 
 #.cache <- .dot('cache')
 .data <- .dot('data')
 
-# Get the cow emoji -----
-library(emoGG)
-cow.emoji <- emoji_get('1f404')[[1]]
+options(stringsAsFactors = FALSE)
 
+# Get the cow emoji -----
+cow.emoji <- emoGG::emoji_get('1f404')[[1]]
+
+
+# Monetary options -----
+
+costs <- list(
+  bull.cost=-7,
+  cow.cost=-7,
+  bull.sell=1, # multiplier for selling a bull
+  cow.sell=1,  # multiplier for selling a bull
+  eh=NA
+)
 
 # Plotting functions --------------
 
