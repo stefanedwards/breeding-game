@@ -31,7 +31,11 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
                          "Optimal contribution selection"="ocs")),
           numericInput('numOCS', 'Degree of optimal contribution',
                        min = 0, max=90, value=45),
-          actionButton('btnGO', 'Calculate', icon=icon('arrow-circle-right'))
+          actionButton('btnGO', 'Calculate', icon=icon('arrow-circle-right')),
+          hr(),
+          #verbatimTextOutput('tmptxt'),
+          #h5('History of settings'),
+          DT::dataTableOutput('tblHistory')
         ),
         tabPanel('Settings', 
           helpText('Scalars for making the cows look nice'),
@@ -46,10 +50,10 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
     mainPanel(
       tabsetPanel(
         tabPanel('Cows!', 
-                 plotOutput('plotCows', height='800px')  ## modify height of plot windows here! height="auto" or height="100%" does not work; kills everything
+                 plotOutput('plotCows', height='700px')  ## modify height of plot windows here! height="auto" or height="100%" does not work; kills everything
                  ),    
         tabPanel('£££',
-                 plotOutput('plotMonies', height='800px')
+                 plotOutput('plotMonies', height='700px')
                  ),
         tabPanel('Diagnostics', plotOutput('plotMain'))   ##
       )

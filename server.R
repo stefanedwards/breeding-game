@@ -10,18 +10,16 @@ source('global.R')
 
 shinyServer(function(input, output, session) {
 
-  #blarg <- data.frame()
+  
+  ## Private variables, specific to the session (apparently) -----
+  .saved_results <- list()
+  .saved_settings <- data.frame()
+  
   
   ## Main selection generator -----------------
-  
-  breed <- eventReactive(input$btnGO, {
+  simulate <- function() {
     progress <- Progress$new(session, min=1, max=15)
     on.exit(progress$close())
-    
-    #my.blarg <- data.frame(row=nrow(blarg)+1, animals=input$sliderBreedAnimals, method=input$radioSelectionMethod)
-    #blarg <<- bind_rows(blarg, my.blarg)
-    
-    #str(blarg)
     
     progress$set(message='Breeding, 15 generations.',
                  detail='Come back in 15-20 years, this stuff takes time!')
@@ -55,10 +53,6 @@ shinyServer(function(input, output, session) {
       results$animals <- bind_rows(results$animals, data.frame(Generation=i, id=new.pop@id, y=new.pop@pheno, stringsAsFactors = FALSE))
       stat.G[i+1,2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
       
-      if (varG(new.pop) < 0.1) {
-        showModal(modalDialog('Your heard, it ded!', footer = modalButton("Dismiss"), fade=TRUE))
-        break
-      }
       
       males <- new.pop[new.pop@gender == 'M', ]
       females <- new.pop[new.pop@gender == 'F', ]
@@ -70,10 +64,16 @@ shinyServer(function(input, output, session) {
       )
       
       results$monies <- bind_rows(results$monies, monies)
+      
+      
+      if (varG(new.pop) < 0.1) {
+        showModal(modalDialog('Your heard, it ded!', footer = modalButton("Dismiss"), fade=TRUE))
+        break
+      }
     }
     results$stat.G <- stat.G
     results
-  })
+  }
   
   # Visual changes from inputs ----------
   
@@ -91,6 +91,7 @@ shinyServer(function(input, output, session) {
   
   output$plotMain <- renderPlot({
     data <- breed()
+    if (is.null(data)) return(NULL)
     
     data$stat.G %>% gather(stat, val, -Generation) %>%
       ggplot(aes(x=Generation, y=val, colour=stat)) +
@@ -105,21 +106,30 @@ shinyServer(function(input, output, session) {
   
   output$plotCows <- renderPlot({
     data <- breed()
+    if (is.null(data)) return(NULL)
     
-    r <- range(data$animals$y)
+    yranges <- sapply(.saved_results, function(x) c(range(x$animals$y), max(x$stat.G$varG)))
+    varGmax <- max(yranges[3,])
+    yranges <- c(min(yranges[1,])*1.05-0.3, max(yranges[2,])*1.05+0.3)
+    
+    r <- yranges
     scale.w <- input$cexWidth *  (r[2]-r[1]) / 15
     scale.h <- input$cexHeight * 15 / (r[2]-r[1])
     
     p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation)) %>%
       ggplot(aes(x=x, y=y, width=y/scale.w, height=y/scale.h)) + geom_tile() +
-        coord_cartesian(xlim=c(0,15)) +
+        coord_cartesian(xlim=c(0,15), ylim=yranges) +
         labs(x='Generation', title='Growing cows')
     
     p1 <- replace_rect_cows(p)
+    i <- which(p1$layout$name == 'panel')
+    t <- p1$layout$t[i]
+    p1$heights[[t]] <- unit(2, 'null')
+    
     p2 <-     data$stat.G %>% ggplot(aes(x=Generation, y=varG * 100, fill=varG)) +
       geom_bar(stat='identity') +
       scale_fill_continuous(low='#F7FBFF', high='#08306B')  +            # brewer.pal(9, 'Blues')  [1] "#F7FBFF" "#DEEBF7" "#C6DBEF" "#9ECAE1" "#6BAED6" "#4292C6" "#2171B5" "#08519C" "#08306B"
-      coord_cartesian(xlim=c(0,15)) +
+      coord_cartesian(xlim=c(0,15), ylim=c(0, varGmax*100)) +
       guides(fill=FALSE) +
       labs(y='Genes in herd', title='How many genes are there in the herd?')
     p2 <- ggplotGrob(p2)
@@ -129,6 +139,13 @@ shinyServer(function(input, output, session) {
   
   output$plotMonies <- renderPlot({
     data <- breed()
+    if (is.null(data)) return(NULL)
+    
+    yranges <- sapply(.saved_results, function(x) sum(x$monies$value)) %>% range
+    yranges <- yranges * 1.05 + c(-500, 500)
+    yranges[1] <- min(yranges[1], 0)
+    yranges[2] <- max(yranges[2], 0)
+    
     saveRDS(data, file='data/breed.rds')
     
     monies <- data$monies
@@ -139,9 +156,51 @@ shinyServer(function(input, output, session) {
       geom_col(aes(fill=as.factor(sign(value)))) + 
       scale_fill_manual(values=c('-1'='red', '1'='#4ea815'), guide=FALSE) +
       scale_y_continuous('Profit (£)', labels=scales::comma) +
+      coord_cartesian(xlim=c(1,15), ylim=yranges) +
       geom_line(data=cummulative, aes(y=cummulative), size=1) + 
       geom_point(data=cummulative, aes(y=cummulative), size=3, pch=21, fill='white') +
       labs(y='Profit (£)')
   })
+  
 
+  old.btn.go <- 0
+  breed <- reactive({
+    b <- input$btnGO
+    h <- input$tblHistory_rows_selected
+    if (b > old.btn.go) {
+      old.btn.go <<- b
+  
+      res <- simulate()
+      
+      .saved_results <<- append(.saved_results, list(res))
+      
+      return(res)
+    } else if (length(h) > 0) {
+      settings <- .saved_settings[h,]
+      updateRadioButtons(session, 'radioSelectionMethod', selected = settings$method)
+    
+      
+      return(.saved_results[[h]])
+    }
+  })
+  
+  output$tblHistory <- DT::renderDataTable({
+    datatable(saved_settings(),
+              options = list(paging=FALSE),
+              caption='History of settings',
+              autoHideNavigation = TRUE,
+              filter = 'none',
+              rownames = FALSE,
+              colnames = c('Setting #', '# Sires', '# Dams', 'Selection method', 'Opt. con. sel. degree'),
+              selection=list(mode='single', target='row')
+    )
+  })
+  
+  saved_settings = eventReactive(input$btnGO, {
+    .saved_settings <<- bind_rows(.saved_settings, 
+                                  data.frame(row=as.integer(input$btnGO), sires=input$sliderSires, dams=input$sliderDams, method=input$radioSelectionMethod, ocs=input$numOCS))   
+    .saved_settings
+    
+  })
 })
+
