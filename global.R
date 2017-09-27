@@ -18,8 +18,12 @@ library(DT)
 options(stringsAsFactors = FALSE)
 
 # Get the cow emoji -----
-cow.emoji <- emoGG::emoji_get('1f404')[[1]]
-
+if (file.exists(.data('cow.emoji.rds'))) {
+  cow.emoji <- readRDS(.data('cow.emoji.rds'))
+} else {
+  cow.emoji <- emoGG::emoji_get('1f404')[[1]]
+  saveRDS(cow.emoji, .data('cow.emoji.rds'))
+}
 
 # Monetary options -----
 
@@ -27,8 +31,9 @@ costs <- list(
   bull.cost=-7,
   cow.cost=-7,
   bull.sell=1, # multiplier for selling a bull
-  cow.sell=1,  # multiplier for selling a bull
-  eh=NA
+  cow.sell=1,  # multiplier for selling a cow
+  eh=NA,
+  snp.cost=c('50'=1, '250'=1.4, '1000'=2)  # Cost for genotyping per animal
 )
 
 # Plotting functions --------------
