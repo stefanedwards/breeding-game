@@ -1,11 +1,5 @@
 # Global modules and variables for shiny app
 
-if (FALSE) {
-  install.packages(c('shiny','dplyr','tidyr','ggplot2','grid','lemon','shinyjs','DT','devtools'))
-  devtools::install_bitbucket('hickeyjohnteam/AlphaSimr')
-  devtools::install_github("dill/emoGG")
-}
-
 library(shiny)
 library(dplyr)
 library(tidyr)
