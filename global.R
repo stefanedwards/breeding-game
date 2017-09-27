@@ -11,6 +11,7 @@ library(AlphaSimR)
 library(emoGG)
 library(shinyjs)
 library(DT)
+library(nadiv)
 
 
 #.cache <- .dot('cache')
@@ -31,10 +32,10 @@ if (file.exists(.data('cow.emoji.rds'))) {
 costs <- list(
   bull.cost=-7,
   cow.cost=-7,
-  bull.sell=1, # multiplier for selling a bull
-  cow.sell=1,  # multiplier for selling a cow
+  bull.sell=1.5, # multiplier for selling a bull
+  cow.sell=1.5,  # multiplier for selling a cow
   eh=NA,
-  snp.cost=c('50'=1, '250'=1.4, '1000'=2)  # Cost for genotyping per animal
+  snp.cost=c('50'=0.1, '250'=.14, '1000'=0.2)  # Cost for genotyping per animal
 )
 
 # Plotting functions --------------
@@ -71,3 +72,4 @@ replace_rect_cows <- function(g, panel='panel') {
   
   g
 }
+

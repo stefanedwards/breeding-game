@@ -20,10 +20,9 @@ new.pop <- base.pop
 stat.G <- matrix(ncol=2,nrow=10, dimnames = list(NULL, c('meanG','varG')))
 for (i in 1:10) {
   cat('Spawning random mating generation', i, '\n')
-  
-  new.pop <- randCross(new.pop, 500, 2, balance=TRUE)
+  parent.pop <- new.pop
+  new.pop <- randCross(parent.pop, 125, 2, balance=TRUE)
   stat.G[i,] <- c(meanG(new.pop), varG(new.pop))
 }
 
-seed.pop <- new.pop
-save(FOUNDER, SIMPARAM, base.pop, seed.pop, stat.G, file=.data('small_population.Rdata'))
+save(FOUNDER, SIMPARAM, base.pop, parent.pop, new.pop, stat.G, file=.data('small_population.Rdata'))

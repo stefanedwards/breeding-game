@@ -1,6 +1,6 @@
 # Run only once to generate data files and install packages.
 
-install.packages(c('shiny','dplyr','tidyr','ggplot2','grid','gridExtra','lemon','shinyjs','DT','devtools'))
+install.packages(c('shiny','dplyr','tidyr','ggplot2','grid','gridExtra','lemon','shinyjs','DT','devtools','nadiv'))
 devtools::install_bitbucket('hickeyjohnteam/AlphaSimr')
 devtools::install_github("dill/emoGG")
 
@@ -14,6 +14,7 @@ require(AlphaSimR)
 require(emoGG)
 require(shinyjs)
 require(DT)
+require(nadiv)
 
 
 source('init_small_population.R')  # to generate the initial breeding population.
