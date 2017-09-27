@@ -14,7 +14,8 @@ shinyServer(function(input, output, session) {
   ## Private variables, specific to the session (apparently) -----
   .saved_results <- list()
   .saved_settings <- data.frame()
-  
+  .saved_summaries_monies <- data.frame()
+  .saved_summaries_animals <- data.frame()
   
   ## Main selection generator -----------------
   simulate <- function() {
@@ -32,26 +33,59 @@ shinyServer(function(input, output, session) {
         randCross2(pop[sample(gender$F, input$sliderDams)], pop[sample(gender$M, input$sliderDams)], 
                    nCrosses = pop@nInd, balance = TRUE, ignoreGender = FALSE, simParam=SIMPARAM)
       }
-    } else {
+    } else if (input$radioSelectionMethod == 'trunc') {
       method <- function(pop) {
-        pop <- setPheno(pop, varE = varG(pop)*2)
-
+        #pop <- setPheno(pop, varE = varG(pop)*2,simParam=SIMPARAM)
+  
         bulls = selectMale(pop, input$sliderSires, use="pheno",simParam=SIMPARAM)
         cows = selectFemale(pop, input$sliderDams, use="pheno",simParam=SIMPARAM)
         randCross2(cows, bulls, nCrosses = pop@nInd, balance = TRUE, ignoreGender = FALSE, simParam=SIMPARAM)
       }
+    } else if (input$radioSelectionMethod == 'gs') {
+      y <- matrix(ncol=1, nrow=0)
+      snps <- matrix(nrow=0, ncol=as.integer(input$numSNPs))
+      
+      method <- function(pop) {
+        
+        snpi <- which(input$numSNPs == names(costs$snp.cost))
+        
+        snps <- rbind(snps, pullSnpGeno(pop, snpChip = snpi, simParam=SIMPARAM))
+        if (nrow(snps) > 3000)
+          snps <- snps[nrow(snps) + (-3000:-1) + 1,]
+        y <- rbind(y, pop@pheno)
+        if (nrow(y) > 3000)
+          y <- y[nrow(snps) + (-3000:-1) + 1,]
+        Z <- diag(1, nrow(y))
+        X <- matrix(1, ncol=1, nrow=nrow(y))
+        
+        sol <- solveUVM(y, X, Z, calcG(snps))
+        pop@ebv <- sol$u[nrow(sol$u) + (-1000:-1) + 1,,drop=FALSE]
+
+        acc <- cor(pop@pheno[,1], pop@ebv[,1])
+        
+        bulls = selectMale(pop, input$sliderSires, use="ebv",simParam=SIMPARAM)
+        cows = selectFemale(pop, input$sliderDams, use="ebv",simParam=SIMPARAM)        
+        res <- randCross2(cows, bulls, nCrosses = pop@nInd, balance = TRUE, ignoreGender = FALSE, simParam=SIMPARAM)
+        attr(res, 'acc') <- acc
+        res
+      }
+    } else {
+      stop('An unimplemented selection method, `', input$radioSelectionMethod, '` was selected.')
     }
     
     results <- list(animals=data.frame(), monies=data.frame())
-    new.pop <- setPheno(seed.pop, varE = varG(seed.pop)*2)
-    stat.G <- data.frame(Generation=0:15) %>% mutate(meanG=0, varG=NA, meanY=0, h2=NA)
+    new.pop <- setPheno(seed.pop, varE = varG(seed.pop)*2,simParam=SIMPARAM)
+    stat.G <- data.frame(Generation=0:15) %>% mutate(meanG=0, varG=NA, meanY=0, h2=NA, acc=NA)
     stat.G[1, 2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
     for (i in 1:15) {
+      
       progress$set(value = i)
       new.pop <- method(new.pop)
-      new.pop <- setPheno(new.pop, varE = varG(new.pop)*2)
+      acc <- ggplot2:::`%||%`(attr(new.pop, 'acc'), NA)
+      new.pop <- setPheno(new.pop, varE = varG(new.pop)*2,simParam=SIMPARAM)
+      
       results$animals <- bind_rows(results$animals, data.frame(Generation=i, id=new.pop@id, y=new.pop@pheno, stringsAsFactors = FALSE))
-      stat.G[i+1,2:5] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno))
+      stat.G[i+1,2:6] <- c(meanG(new.pop), varG(new.pop), meanP(new.pop), varG(new.pop) / var(new.pop@pheno), acc=acc)
       
       
       males <- new.pop[new.pop@gender == 'M', ]
@@ -78,11 +112,10 @@ shinyServer(function(input, output, session) {
   # Visual changes from inputs ----------
   
   observeEvent(input$radioSelectionMethod, {
-    #cat('On button!', input$radioSelectionMethod, '\n')
-    if (input$radioSelectionMethod == 'ocs') {
-      shinyjs::enable('numOCS')
+    if (input$radioSelectionMethod == 'gs') {
+      shinyjs::show('numSNPs')
     } else {
-      shinyjs::disable('numOCS')
+      shinyjs::hide('numSNPs')
     }
   })
   
@@ -94,6 +127,7 @@ shinyServer(function(input, output, session) {
     if (is.null(data)) return(NULL)
     
     data$stat.G %>% gather(stat, val, -Generation) %>%
+      drop_na(val) %>%
       ggplot(aes(x=Generation, y=val, colour=stat)) +
         geom_point() + geom_line() +
         coord_capped_cart(bottom='none', left='none') +
@@ -120,7 +154,9 @@ shinyServer(function(input, output, session) {
       ggplot(aes(x=x, y=y, width=y/scale.w, height=y/scale.h)) + geom_tile() +
         coord_cartesian(xlim=c(0,15), ylim=yranges) +
         labs(x='Generation', title='Growing cows')
-    
+    #p <- data$animals %>% ggplot(aes(x=Generation, y=y, size=y)) + geom_point() +
+    #p1 <- ggplotGrob(p)
+      
     p1 <- replace_rect_cows(p)
     i <- which(p1$layout$name == 'panel')
     t <- p1$layout$t[i]
@@ -135,6 +171,7 @@ shinyServer(function(input, output, session) {
     p2 <- ggplotGrob(p2)
     
     grid.draw(rbind(p1, p2, size='first'))
+    #grid.arrange(p1, p2)
   })  
   
   output$plotMonies <- renderPlot({
@@ -162,6 +199,24 @@ shinyServer(function(input, output, session) {
       labs(y='Profit (£)')
   })
   
+  output$plotSummaries <- renderPlot({
+    data <- saved_summaries()
+    
+    if (nrow(data$animals) == 0) return(NULL)
+    
+    p1 <- data$animals %>% 
+      ggplot(aes(x=as.factor(id), y=y, fill=method)) + 
+      geom_boxplot() +
+      labs(y='Phenotypic value of animals', x='Setting #')
+    p2 <- data$monies %>%
+      ggplot(aes(x=as.factor(id), y=monies, fill=method)) +
+      geom_col() +
+      labs(y='Total profit (£)', x='Setting #')
+    
+    grid.draw(gtable_rbind(ggplotGrob(p1), ggplotGrob(p2)))
+    
+  })
+  
 
   old.btn.go <- 0
   breed <- reactive({
@@ -174,13 +229,28 @@ shinyServer(function(input, output, session) {
       
       .saved_results <<- append(.saved_results, list(res))
       
+      
+      ## summarise monies:
+      monies <- sum(res$monies$value)
+      last.y <- res$animals[res$animals$Generation == max(res$animals$Generation),'y',drop=FALSE]
+      last.y$id <- as.integer(b)
+      last.y$method <- input$radioSelectionMethod
+      
+      .saved_summaries_monies <<- bind_rows(.saved_summaries_monies,
+                                     data.frame(id=as.integer(b), method=input$radioSelectionMethod, monies=monies))
+      .saved_summaries_animals <<- bind_rows(.saved_summaries_animals, last.y)
+      
       return(res)
     } else if (length(h) > 0) {
       settings <- .saved_settings[h,]
+      updateSliderInput(session, 'sliderSires', value=settings$sires)
+      updateSliderInput(session, 'sliderDams', value=settings$dams)
       updateRadioButtons(session, 'radioSelectionMethod', selected = settings$method)
-    
+      updateNumericInput(session, 'numOCS', value = settings$ocs)
       
       return(.saved_results[[h]])
+    } else if (length(.saved_results) > 0) {
+      return(.saved_results[[length(.saved_results)]])
     }
   })
   
@@ -191,16 +261,21 @@ shinyServer(function(input, output, session) {
               autoHideNavigation = TRUE,
               filter = 'none',
               rownames = FALSE,
-              colnames = c('Setting #', '# Sires', '# Dams', 'Selection method', 'Opt. con. sel. degree'),
+              colnames = c('Setting #', '# Sires', '# Dams', 'Selection method', '# SNPs for GS'),
               selection=list(mode='single', target='row')
     )
   })
+
   
   saved_settings = eventReactive(input$btnGO, {
     .saved_settings <<- bind_rows(.saved_settings, 
-                                  data.frame(row=as.integer(input$btnGO), sires=input$sliderSires, dams=input$sliderDams, method=input$radioSelectionMethod, ocs=input$numOCS))   
+                                  data.frame(row=as.integer(input$btnGO), sires=input$sliderSires, dams=input$sliderDams, method=input$radioSelectionMethod, snps=input$numSNPs))   
     .saved_settings
     
+  })
+  
+  saved_summaries <- eventReactive(input$maintab, {
+    list(animals=.saved_summaries_animals, monies=.saved_summaries_monies)
   })
 })
 

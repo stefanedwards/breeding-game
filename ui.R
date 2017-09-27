@@ -26,11 +26,13 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
                  ),
           radioButtons('radioSelectionMethod', 'How do you want to select who to breed?',
                        c("By random ('Random selection')"='random', 
-                         "Best performance ('Truncation selection')"='trunc',
-                         "Genomic selection"="gs",
-                         "Optimal contribution selection"="ocs")),
-          numericInput('numOCS', 'Degree of optimal contribution',
-                       min = 0, max=90, value=45),
+                         "Parent average"='pa',
+                         "Pedigree based selection"="pebv",
+                         "Genomic selection"="gs")),
+          #  numericInput('numOCS', 'Degree of optimal contribution',
+          #             min = 0, max=90, value=45),
+          selectInput('numSNPs', 'Genotyping density', 
+                      choices = structure(names(costs$snp.cost), .Names=sprintf('%s SNPS (%.1f£ per animal)', names(costs$snp.cost), costs$snp.cost))),
           actionButton('btnGO', 'Calculate', icon=icon('arrow-circle-right')),
           hr(),
           #verbatimTextOutput('tmptxt'),
@@ -48,14 +50,19 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
   
     # Show result
     mainPanel(
-      tabsetPanel(
-        tabPanel('Cows!', 
+      tabsetPanel(id='maintab',
+        tabPanel('Cows!', value='cows',
                  plotOutput('plotCows', height='700px')  ## modify height of plot windows here! height="auto" or height="100%" does not work; kills everything
                  ),    
-        tabPanel('£££',
+        tabPanel('£££', value='monies',
                  plotOutput('plotMonies', height='700px')
                  ),
-        tabPanel('Diagnostics', plotOutput('plotMain'))   ##
+        tabPanel('Compare settings', value='summaries',
+                 plotOutput('plotSummaries', height='700px')
+                 ),
+        tabPanel('Diagnostics',  value='diagnostics',
+                 plotOutput('plotMain')
+                 )   ##
       )
     )
   )

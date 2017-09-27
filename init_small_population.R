@@ -5,9 +5,12 @@ source('global.R')
 
 FOUNDER <- AlphaSimR::runMacs(500, 1, 2000, species='CATTLE')
 
-SIMPARAM <- createSimulation(FOUNDER, maxQtl = 500, maxSnp = 500, gender='yes_rand')
-SIMPARAM <- addTraitA(FOUNDER,nQtlPerChr=500,meanG=5,varG=1,
-                     simParam=SIMPARAM)
+SIMPARAM <- createSimulation(FOUNDER, maxQtl = 500, maxSnp = 1000, gender='yes_rand') %>%
+  addTraitA(FOUNDER,nQtlPerChr=500,meanG=5,varG=1, simParam=.) %>%
+  addSnpChip(50, simParam=.) %>%
+  addSnpChip(250, simParam=.) %>%
+  addSnpChip(1000, simParam=.)
+
 
 base.pop <- newPop(FOUNDER, simParam = SIMPARAM)
 
