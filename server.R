@@ -196,9 +196,10 @@ shinyServer(function(input, output, session) {
     t <- p1$layout$t[i]
     p1$heights[[t]] <- unit(2, 'null')
     
-    p2 <-     data$stat.G %>% ggplot(aes(x=Generation, y=varG * 100, fill=varG)) +
+    p2 <-     data$stat.G %>% ggplot(aes(x=Generation, y=varG * 100, fill=varG*100)) +
       geom_bar(stat='identity') +
-      scale_fill_continuous(low='#F7FBFF', high='#08306B')  +            # brewer.pal(9, 'Blues')  [1] "#F7FBFF" "#DEEBF7" "#C6DBEF" "#9ECAE1" "#6BAED6" "#4292C6" "#2171B5" "#08519C" "#08306B"
+      #scale_fill_continuous(low='#F7FBFF', high='#08306B')  +            # brewer.pal(9, 'Blues')  [1] "#F7FBFF" "#DEEBF7" "#C6DBEF" "#9ECAE1" "#6BAED6" "#4292C6" "#2171B5" "#08519C" "#08306B"4
+      scale_fill_gradient2(limits=c(0, varGmax*100), midpoint=varGmax*50, low='#FC8D59', mid='#FFFFBF', high='#91CF60') + #scale_fill_brewer(palette = 'RdYlGn', limits=c(0, varGmax*100)) +  # brewer.pal(3, 'RdYlGn') [1] "#FC8D59" "#FFFFBF" "#91CF60"
       coord_cartesian(xlim=c(-1,15), ylim=c(0, varGmax*100)) +
       guides(fill=FALSE) +
       labs(y='Genes in herd', title='How many genes are there in the herd?')
