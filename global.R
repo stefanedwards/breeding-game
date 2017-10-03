@@ -8,10 +8,10 @@ library(grid)
 library(gridExtra)
 library(lemon)
 library(AlphaSimR)
-library(emoGG)
 library(shinyjs)
 library(DT)
 library(nadiv)
+
 
 
 #.cache <- .dot('cache')
@@ -23,6 +23,7 @@ options(stringsAsFactors = FALSE)
 if (file.exists(.data('cow.emoji.rds'))) {
   cow.emoji <- readRDS(.data('cow.emoji.rds'))
 } else {
+  require(emoGG)
   cow.emoji <- emoGG::emoji_get('1f404')[[1]]
   saveRDS(cow.emoji, .data('cow.emoji.rds'))
 }
@@ -39,6 +40,10 @@ costs <- list(
 )
 
 # Plotting functions --------------
+
+hues <- scales::hue_pal()(4)
+names(hues) <- c('random','pa','pebv','gs')
+method.fill.scale <- scale_fill_manual('Selection method:', values=hues, labels=c('random'='Random','pa'='Parent average', 'pebv'='Pedigree based\nbreeding value', 'gs'='Genomic based\nbreeding value'))
 
 #' Reduces the size of animals to plot and jitters the x-values.
 #' Selects top and bottom 5, and samples among the remaing with `frac`.

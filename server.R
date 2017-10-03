@@ -187,7 +187,8 @@ shinyServer(function(input, output, session) {
     p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation, frac = 5/250)) %>%
       ggplot(aes(x=x, y=y, width=y/scale.w, height=y/scale.h)) + geom_tile() +
         coord_cartesian(xlim=c(-1,15), ylim=yranges) +
-        labs(x='Generation', title='Growing cows')
+        labs(x='Generation', title='Growing cows') + 
+        theme_minimal(12)
     #p <- data$animals %>% ggplot(aes(x=Generation, y=y, size=y)) + geom_point() +
     #p1 <- ggplotGrob(p)
       
@@ -202,7 +203,8 @@ shinyServer(function(input, output, session) {
       scale_fill_gradient2(limits=c(0, varGmax*100), midpoint=varGmax*50, low='#FC8D59', mid='#FFFFBF', high='#91CF60') + #scale_fill_brewer(palette = 'RdYlGn', limits=c(0, varGmax*100)) +  # brewer.pal(3, 'RdYlGn') [1] "#FC8D59" "#FFFFBF" "#91CF60"
       coord_cartesian(xlim=c(-1,15), ylim=c(0, varGmax*100)) +
       guides(fill=FALSE) +
-      labs(y='Genes in herd', title='How many genes are there in the herd?')
+      labs(y='Genes in herd', title='How many genes are there in the herd?') + 
+      theme_minimal(12) + theme(panel.grid.major.x = element_blank())
     p2 <- ggplotGrob(p2)
     
     grid.draw(rbind(p1, p2, size='first'))
@@ -234,7 +236,8 @@ shinyServer(function(input, output, session) {
       coord_cartesian(xlim=c(0,15), ylim=yranges) +
       geom_line(data=cummulative, aes(y=cummulative), size=1) + 
       geom_point(data=cummulative, aes(y=cummulative), size=3, pch=21, fill='white') +
-      labs(y='Profit (£)')
+      labs(y='Profit (£)', title='How much money are you making?') + 
+      theme_minimal(12) + theme(panel.grid.major.x = element_blank())
   })
   
   output$plotSummaries <- renderPlot({
@@ -245,12 +248,16 @@ shinyServer(function(input, output, session) {
     p1 <- data$animals %>% 
       ggplot(aes(x=as.factor(id), y=y, fill=method)) + 
       geom_boxplot() +
-      labs(y='Phenotypic value of animals', x='Setting #')
+      labs(y='Phenotypic value of animals', x='Setting #', title='Compare average size') + 
+      theme_minimal(12) + theme(panel.grid.major.x = element_blank()) +
+      method.fill.scale
     p2 <- data$monies %>%
       ggplot(aes(x=as.factor(id), y=monies, fill=method)) +
       geom_col() +
       scale_y_continuous(label=scales::comma) +
-      labs(y='Total profit (£)', x='Setting #')
+      labs(y='Total profit (£)', x='Setting #', title='Compare total profit') + 
+      theme_minimal(12) + theme(panel.grid.major.x = element_blank()) +
+      method.fill.scale
     
     save(p1, p2, data, file='tmp_summaries.Rdata')
     grid.draw(gtable_rbind(ggplotGrob(p1), ggplotGrob(p2)))
