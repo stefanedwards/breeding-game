@@ -1,6 +1,6 @@
 # Run only once to generate data files and install packages.
 
-install.packages(c('shiny','dplyr','tidyr','ggplot2','grid','gridExtra','lemon','shinyjs','DT','devtools','nadiv'))
+install.packages(c('shiny','dplyr','tidyr','ggplot2','grid','gridExtra','lemon','shinyjs','DT','devtools','nadiv','ggbeeswarm'))
 devtools::install_bitbucket('hickeyjohnteam/AlphaSimr')
 devtools::install_github("dill/emoGG")
 

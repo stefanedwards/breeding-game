@@ -11,7 +11,7 @@ library(AlphaSimR)
 library(shinyjs)
 library(DT)
 library(nadiv)
-
+library(ggbeeswarm)
 
 
 #.cache <- .dot('cache')
@@ -44,6 +44,7 @@ costs <- list(
 hues <- scales::hue_pal()(4)
 names(hues) <- c('random','pa','pebv','gs')
 method.fill.scale <- scale_fill_manual('Selection method:', values=hues, labels=c('random'='Random','pa'='Parent average', 'pebv'='Pedigree based\nbreeding value', 'gs'='Genomic based\nbreeding value'))
+method.col.scale <- scale_colour_manual('Selection method:', values=hues, labels=c('random'='Random','pa'='Parent average', 'pebv'='Pedigree based\nbreeding value', 'gs'='Genomic based\nbreeding value'))
 
 #' Reduces the size of animals to plot and jitters the x-values.
 #' Selects top and bottom 5, and samples among the remaing with `frac`.

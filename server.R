@@ -246,11 +246,12 @@ shinyServer(function(input, output, session) {
     if (nrow(data$animals) == 0) return(NULL)
     
     p1 <- data$animals %>% 
-      ggplot(aes(x=as.factor(id), y=y, fill=method)) + 
-      geom_boxplot() +
+      ggplot(aes(x=as.factor(id), y=y, fill=method, colour=method)) + 
+      #geom_boxplot() +
+      geom_beeswarm(dodge.width=.8) +
       labs(y='Phenotypic value of animals', x='Setting #', title='Compare average size') + 
       theme_minimal(12) + theme(panel.grid.major.x = element_blank()) +
-      method.fill.scale
+      method.fill.scale + method.col.scale
     p2 <- data$monies %>%
       ggplot(aes(x=as.factor(id), y=monies, fill=method)) +
       geom_col() +
