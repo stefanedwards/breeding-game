@@ -184,18 +184,35 @@ shinyServer(function(input, output, session) {
     scale.w <- input$cexWidth *  (r[2]-r[1]) / 15
     scale.h <- input$cexHeight * 15 / (r[2]-r[1])
     
-    p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation, frac = 5/250)) %>%
-      ggplot(aes(x=x, y=y, width=y/scale.w, height=y/scale.h)) + geom_tile() +
-        coord_cartesian(xlim=c(-1,15), ylim=yranges) +
-        labs(x='Generation', title='Growing cows') + 
-        theme_minimal(12)
-    #p <- data$animals %>% ggplot(aes(x=Generation, y=y, size=y)) + geom_point() +
-    #p1 <- ggplotGrob(p)
-      
-    p1 <- replace_rect_cows(p)
+    if (input$viewCows == 'cows') {
+    
+      p <- data$animals %>% group_by(Generation) %>% do(shake_and_sample(.$y, .$Generation, frac = 5/250)) %>%
+        ggplot(aes(x=x, y=y, width=y/scale.w, height=y/scale.h)) + geom_tile() +
+          coord_cartesian(xlim=c(-1,15), ylim=yranges) +
+          labs(x='Generation', y='Size of cows', title='Growing cows') + 
+          theme_minimal(12)
+      #p <- data$animals %>% ggplot(aes(x=Generation, y=y, size=y)) + geom_point() +
+      #p1 <- ggplotGrob(p)
+        
+      p1 <- replace_rect_cows(p)
+    } else {
+      p1 <- data$animals %>% 
+        ggplot(aes(x=Generation, y=y)) + 
+        geom_point(position=position_jitter(width=0.3, height=NULL)) +
+        stat_summary(geom='line', fun.y=mean, size=1) +
+        stat_summary(geom='point', fun.y=mean, size=3) +
+        method.col.scale +
+        coord_cartesian(xlim=c(0.5, xr*1.05 + 1)) +
+        theme_minimal(12) + 
+        theme(axis.ticks.x = element_blank()) +
+        labs(x='Generation', y='Size of cows')
+      p1 <- ggplotGrob(p1)
+    }
+
     i <- which(p1$layout$name == 'panel')
     t <- p1$layout$t[i]
     p1$heights[[t]] <- unit(2, 'null')
+    
     
     p2 <-     data$stat.G %>% ggplot(aes(x=Generation, y=varG * 100, fill=varG*100)) +
       geom_bar(stat='identity') +

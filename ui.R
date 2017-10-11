@@ -43,6 +43,9 @@ shinyUI(fluidPage(title='Breeding cattle with AlphaSimR',
           helpText('Scalars for making the cows look nice'),
           numericInput('cexWidth','Width divider', 15),
           numericInput('cexHeight', 'Height divider', 6),
+          radioButtons('viewCows', 'View cow plot or just scatter plot:',
+                       c('Cows!'='cows',
+                         'Scatter plot'='scatter')),
           hr()
         )
       )
