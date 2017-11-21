@@ -15,6 +15,10 @@ an R-package designed for simulating both animal and plant breeding, using
 Mendelian inheritance of realistic chromosomes.
 
 
+**NB!** The breeding games were developed using AlphaSimR v. **0.3.1**.
+The most likely commit for this version is `3d8ea94` from [2017-09-13](https://bitbucket.org/hickeyjohnteam/alphasimr/commits/3d8ea94461e4a297a383bb666dcaebc668d34006).
+Later versions of AlphaSimR might not be backward-compatible with these apps.
+
 ## Compare Selection
 
 Breed your cattle heard for 15 generations using on of several choices for selection:
