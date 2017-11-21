@@ -10,6 +10,11 @@ how different technologies may be applied for selection in cattle.
 The two folders present, `compare-selection` and `change-selection` are very similar in design.
 See the following descriptions for them.
 
+The power house of these apps is '[AlphaSimR](https://bitbucket.org/hickeyjohnteam/alphasimr)',
+an R-package designed for simulating both animal and plant breeding, using
+Mendelian inheritance of realistic chromosomes.
+
+
 ## Compare Selection
 
 Breed your cattle heard for 15 generations using on of several choices for selection:
@@ -73,6 +78,11 @@ Click any of these to retrieve the previous simulation.
 The outcome of all scenarios can be compared under the 'Compare settings'-tab:
 
 ![Compare outcome](figures/compare-selection-compare-tab.png)
+
+## Change selection
+
+This app allows the user to change selection strategy during breeding.
+Its setup is very similar to **Compare selection** described above.
 
 
 ## FAQ
