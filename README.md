@@ -99,3 +99,8 @@ Error in shinyAppDir(x) : App dir must contain either app.R or server.R.
 ```
 
 change working directory to the directory containing the files `ui.R` and `server.R`.
+
+## Acknowledgements
+
+* Chris Gaynor's [AlphaSimR](https://bitbucket.org/hickeyjohnteam/alphasimr) is paramount for this Shiny App. It literally drives the simulation.
+* Martin Johnsson (https://twitter.com/mrtnj) and Andrew Whalen (https://twitter.com/AndrewCZWhalen) for valuable input on improvements to the game, and for volunteering to showcase it at the Roslin Institute Open Doors
